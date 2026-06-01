@@ -30739,6 +30739,7 @@
     github = "zainkergaye";
     githubId = 62440012;
     name = "Zain Kergaye";
+    keys = [ { fingerprint = "272E 70F6 AE30 1D18 2B4E  9C85 4BA9 E3D2 BFAD CD7D"; } ];
   };
   zakkor = {
     email = "edward.dalbon@gmail.com";
