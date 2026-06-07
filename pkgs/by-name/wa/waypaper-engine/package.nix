@@ -129,7 +129,9 @@ stdenv.mkDerivation (finalAttrs: {
     homepage = "https://github.com/0bCdian/Waypaper-Engine";
     license = lib.licenses.gpl3Plus;
     changelog = "https://github.com/0bCdian/Waypaper-Engine/releases/tag/${finalAttrs.src.rev}";
-    maintainers = [ lib.maintainers.zainkergaye ];
+    maintainers = with lib.maintainers; [
+      zainkergaye
+      phanirithvij
     ];
     platforms = lib.platforms.linux;
     mainProgram = "waypaper-engine";
