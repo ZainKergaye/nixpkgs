@@ -5,13 +5,14 @@
   pnpm_11,
   pnpmConfigHook,
   stdenv,
+  gitMinimal,
   fetchFromGitHub,
   electron,
   makeWrapper,
-  makeDesktopItem,
-  copyDesktopItems,
   buildGoModule,
   wayland,
+  awww,
+  feh,
 }:
 let
   pnpm = pnpm_11;
@@ -24,15 +25,21 @@ let
     tag = "v${version}";
     hash = "sha256-oee44RABW+0BcirsJbc5WnLVQeyAamXfxj4Q1x4B2JA=";
   };
+
   backend = buildGoModule (finalAttrs: {
     pname = "waypaper-daemon";
     inherit version src;
 
     sourceRoot = "${finalAttrs.src.name}/daemon";
 
-    buildInputs = [
-      wayland
+    patches = [
+      ./0002-fix-awww-require-WAYLAND_DISPLAY.patch
+      ./0003-fix-core-persist-active-backend-config-when-already.patch
     ];
+
+    patchFlags = [ "-p2" ];
+
+    buildInputs = [ wayland ];
 
     proxyVendor = true;
     vendorHash = "sha256-KGyaZhWU5UOPV73MitA5eycy3ugH+rwgNu09r3ALtIo=";
@@ -43,7 +50,6 @@ let
       "-s"
       "-X main.version=${version}"
     ];
-
   });
 in
 stdenv.mkDerivation (finalAttrs: {
@@ -58,7 +64,6 @@ stdenv.mkDerivation (finalAttrs: {
     pnpmConfigHook
     pnpm # At least required by pnpmConfigHook, if not other (custom) phases
     makeWrapper
-    copyDesktopItems
   ];
 
   pnpmDeps = fetchPnpmDeps {
@@ -71,41 +76,50 @@ stdenv.mkDerivation (finalAttrs: {
   buildPhase = ''
     runHook preBuild
 
+    # binary patch unsupported by patch command, requires git apply
+    PATH=$PATH:${lib.makeBinPath [ gitMinimal ]}
+    git apply ${./0001-fix-null-strings.patch}
+
+    substituteInPlace globals/configReader.ts \
+      --replace-fail "process.resourcesPath" "\"$out/bin\""
+
     pnpm exec vite build
 
     runHook postBuild
   '';
 
-  desktopItems = [
-    (makeDesktopItem {
-      name = "waypaper-engine";
-      exec = finalAttrs.meta.mainProgram;
-      comment = finalAttrs.meta.description;
-      type = "Application";
-      icon = "waypaper-engine";
-      desktopName = "Waypaper-engine";
-      categories = [ "Utility" ];
-    })
-  ];
-
   installPhase = ''
     runHook preInstall
     mkdir $out
-    cp -r ./ $out/
-    mkdir $out/bin
-    cp ${backend}/bin/daemon $out/bin/
+    mkdir -p $out/bin $out/share/applications $out/libexec/waypaper-engine/apps/desktop
+
+    cp -r node_modules $out/libexec/waypaper-engine
+    cp -r dist $out/libexec/waypaper-engine/apps/desktop
+    cp -r dist-electron $out/libexec/waypaper-engine/apps/desktop
 
     for size in 16x16 32x32 64x64 128x128 256x256 512x512; do
       mkdir -p "$out/share/icons/hicolor/$size/apps" && cp "build/icons/$size.png" "$out/share/icons/hicolor/$size/apps/waypaper-engine.png"
     done
 
+    cp waypaper-engine.desktop $out/share/applications
+
     runHook postInstall
   '';
 
   postInstall = ''
-    makeWrapper ${electron}/bin/electron $out/bin/${finalAttrs.pname} \
-      --add-flags $out/dist-electron/main.js
+    makeWrapper ${electron}/bin/electron $out/bin/waypaper-engine \
+      --add-flags $out/libexec/waypaper-engine/apps/desktop/dist-electron/main.js
+
+    makeWrapper ${finalAttrs.passthru.backend}/bin/daemon $out/bin/waypaper-daemon \
+      --prefix PATH : ${
+        lib.makeBinPath [
+          awww
+          feh
+        ]
+      }
   '';
+
+  passthru = { inherit backend; };
 
   meta = {
     description = "A wallpaper setter GUI with playlist functionality for Wayland and X11";
@@ -116,10 +130,8 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.gpl3Plus;
     changelog = "https://github.com/0bCdian/Waypaper-Engine/releases/tag/${finalAttrs.src.rev}";
     maintainers = [ lib.maintainers.zainkergaye ];
-    platforms = [
-      "x86_64-linux"
     ];
+    platforms = lib.platforms.linux;
     mainProgram = "waypaper-engine";
   };
-
 })
