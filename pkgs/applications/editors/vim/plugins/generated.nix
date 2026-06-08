@@ -5223,28 +5223,15 @@ final: prev: {
 
   diffview-nvim = buildVimPlugin {
     pname = "diffview.nvim";
-    version = "0-unstable-2024-06-13";
-    src = fetchFromGitHub {
-      owner = "sindrets";
-      repo = "diffview.nvim";
-      rev = "4516612fe98ff56ae0415a259ff6361a89419b0a";
-      hash = "sha256-SX+ybIzL/w6uyCy4iZKnWnzTFwqB1oXSgyYVAdpdKi8=";
-    };
-    meta.homepage = "https://github.com/sindrets/diffview.nvim/";
-    meta.license = unfree;
-    meta.hydraPlatforms = [ ];
-  };
-
-  diffview-plus-nvim = buildVimPlugin {
-    pname = "diffview.nvim";
     version = "0.34";
     src = fetchFromGitHub {
       owner = "dlyongemallo";
-      repo = "diffview-plus.nvim";
+      repo = "diffview.nvim";
       tag = "v0.34";
       hash = "sha256-M3Hf4y9HGFquBOK/Stv5FIxoVYX4aoO4dbbYQNPhisk=";
     };
     meta.homepage = "https://github.com/dlyongemallo/diffview.nvim/";
+    meta.license = unfree;
     meta.hydraPlatforms = [ ];
   };
 
@@ -12478,14 +12465,15 @@ final: prev: {
 
   nvim-dap-disasm = buildVimPlugin {
     pname = "nvim-dap-disasm";
-    version = "0-unstable-2026-02-25";
-    src = fetchgit {
-      url = "https://codeberg.org/Jorenar/nvim-dap-disasm";
+    version = "0-unstable-2026-02-24";
+    src = fetchFromGitHub {
+      owner = "jorenar";
+      repo = "nvim-dap-disasm";
       rev = "1119f3f2b22e411adcd123cdcf6d0425b61a31a7";
       hash = "sha256-lq0tbMksVXccf6GGD7OxWAuoD9w8tlt30dpJSMtN4g8=";
     };
-    meta.homepage = "https://codeberg.org/Jorenar/nvim-dap-disasm";
-    meta.license = unfree;
+    meta.homepage = "https://github.com/jorenar/nvim-dap-disasm/";
+    meta.license = getLicenseFromSpdxId "MIT";
     meta.hydraPlatforms = [ ];
   };
 
