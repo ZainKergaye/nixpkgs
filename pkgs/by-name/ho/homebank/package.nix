@@ -39,6 +39,7 @@ stdenv.mkDerivation (finalAttrs: {
     maintainers = with lib.maintainers; [
       pSub
       frlan
+      zainkergaye
     ];
     platforms = lib.platforms.linux ++ lib.platforms.darwin;
   };
